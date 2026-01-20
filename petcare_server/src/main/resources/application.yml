@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: PetCare
+  profiles:
+    active: dev
+

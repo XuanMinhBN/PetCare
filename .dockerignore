@@ -1,0 +1,20 @@
+# Bỏ qua thư mục git
+.git
+.gitignore
+
+# Bỏ qua thư mục thư viện rác của Frontend
+**/node_modules
+**/build
+**/dist
+npm-debug.log
+
+# Bỏ qua thư mục build rác của Backend
+**/target
+**/*.jar
+**/mvnw
+**/mvnw.cmd
+**/.mvn
+
+# Bỏ qua các file cài đặt IDE
+.idea
+.vscode
