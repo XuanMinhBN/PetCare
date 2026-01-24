@@ -24,6 +24,8 @@ import BookingHistory from "./pages/BookingHistory";
 import AddAddress from "./pages/AddAddress";
 import EditAddress from "./pages/EditAddress";
 import Notifications from "./pages/Notifications";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ProductManagement from "./pages/admin/ProductManagement";
 import OrderManagement from "./pages/admin/OrderManagement";
@@ -45,9 +47,22 @@ function App() {
   const [navigationStack, setNavigationStack] = React.useState([]);
   const [isInitialized, setIsInitialized] = React.useState(false);
 
-  // Check authentication on app load
+  // Check authentication on app load and handle URL routing
   React.useEffect(() => {
     const checkAuth = () => {
+      // Kiểm tra URL để xử lý routing cho reset password với token
+      const path = window.location.pathname;
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+
+      // Nếu URL là /reset-password và có token, chuyển đến trang reset password
+      if (path === "/reset-password" && token) {
+        setScreen("reset-password");
+        setNavigationStack(["reset-password"]);
+        setIsInitialized(true);
+        return;
+      }
+
       const isAuthenticated = authAPI.isAuthenticated();
       if (isAuthenticated) {
         setScreen("home");
@@ -66,6 +81,8 @@ function App() {
   const goLogin = () => setScreen("login");
   const goRegister = () => setScreen("register");
   const goLanding = () => setScreen("landing");
+  const goForgotPassword = () => setScreen("forgot-password");
+  const goResetPassword = () => setScreen("reset-password");
   const goStore = () => {
     setScreen("store");
     setNavigationStack(["home", "store"]);
@@ -93,9 +110,32 @@ function App() {
   };
 
   if (screen === "login")
-    return <Login goHome={goHome} goLanding={goLanding} />;
+    return (
+      <Login
+        goHome={goHome}
+        goLanding={goLanding}
+        goForgotPassword={goForgotPassword}
+        goResetPassword={goResetPassword}
+      />
+    );
   if (screen === "register")
     return <Register goHome={goHome} goLogin={goLogin} goLanding={goLanding} />;
+  if (screen === "forgot-password")
+    return (
+      <ForgotPassword
+        goLogin={goLogin}
+        goLanding={goLanding}
+        goResetPassword={goResetPassword}
+      />
+    );
+  if (screen === "reset-password")
+    return (
+      <ResetPassword
+        goLogin={goLogin}
+        goLanding={goLanding}
+        goForgotPassword={goForgotPassword}
+      />
+    );
   if (screen === "home") {
     // Initialize navigation stack when going to home
     if (navigationStack.length === 0) {

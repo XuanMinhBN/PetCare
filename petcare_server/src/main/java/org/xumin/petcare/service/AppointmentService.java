@@ -129,7 +129,7 @@ public class AppointmentService {
     @Transactional(readOnly = true)
     public Page<AppointmentDTO> getAllAppointmentsOrderDesc(Pageable pageable) {
         log.debug("Request to get all appointments desc");
-        Page<Appointment> appointment = appointmentRepository.getAppointmentsOrderDesc(pageable);
+        Page<Appointment> appointment = appointmentRepository.getAllByOrderByIdDesc(pageable);
         return appointment.map(appointmentMapper::toDto);
     }
 

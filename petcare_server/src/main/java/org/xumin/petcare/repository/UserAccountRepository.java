@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
     Optional<UserAccount> findOneByEmailIgnoreCase(String email);
+    Optional<UserAccount> findOneByResetKey(String resetKey);
 }

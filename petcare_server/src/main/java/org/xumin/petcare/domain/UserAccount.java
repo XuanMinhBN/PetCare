@@ -53,6 +53,12 @@ public class UserAccount implements Serializable {
     @Column(name = "updated_at")
     private Instant updated;
 
+    @Column(name = "reset_key", length = 50)
+    private String resetKey;
+
+    @Column(name = "reset_date")
+    private Instant resetDate;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Appointment> appointments = new HashSet<>();
 
@@ -208,6 +214,22 @@ public class UserAccount implements Serializable {
 
     public void setNotifications(Set<Notification> notifications) {
         this.notifications = notifications;
+    }
+
+    public String getResetKey() {
+        return resetKey;
+    }
+
+    public void setResetKey(String resetKey) {
+        this.resetKey = resetKey;
+    }
+
+    public Instant getResetDate() {
+        return resetDate;
+    }
+
+    public void setResetDate(Instant resetDate) {
+        this.resetDate = resetDate;
     }
 
     @Override

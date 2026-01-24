@@ -9,6 +9,8 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.type.descriptor.sql: trace
+    org.springframework.mail: DEBUG
+    jakarta.mail: DEBUG
 
 spring:
   devtools:
@@ -44,3 +46,15 @@ spring:
     hidden method:
       filter:
         enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true

@@ -11,6 +11,6 @@ import org.xumin.petcare.domain.Appointment;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long>, JpaSpecificationExecutor<Appointment> {
     Page<Appointment> getAppointmentsByUserId(Long userId, Pageable pageable);
     Appointment findAppointmentById(Long id);
-    Page<Appointment> getAppointmentsOrderDesc(Pageable pageable);
+    Page<Appointment> getAllByOrderByIdDesc(Pageable pageable);
     Page<Appointment> getAppointmentsByUserIdOrderByIdDesc(Long userId, Pageable pageable);
 }

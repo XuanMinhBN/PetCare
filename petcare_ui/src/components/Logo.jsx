@@ -3,10 +3,10 @@ import React from "react";
 function Logo() {
   return (
     <div className="flex flex-col items-center select-none">
-      <div className="text-6xl sm:text-7xl font-extrabold tracking-wider text-white drop-shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-        PETFIT
-      </div>
-      <div className="-mt-10 mb-6">
+      <div className="flex items-start w-full">
+        <div className="text-6xl sm:text-7xl font-extrabold tracking-wider text-white drop-shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+          PETCARE
+        </div>
         <svg
           width="42"
           height="42"

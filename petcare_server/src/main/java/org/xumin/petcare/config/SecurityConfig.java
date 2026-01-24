@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/booking/appointments/{id}/confirm", "/api/booking/appointments/{id}/complete").hasRole("STAFF")
                         .requestMatchers("/api/login", "/api/register", "/api/catalog/**", "/api/profile/**", "/api/booking/**", "/api/checkout/**").permitAll()
+                        .requestMatchers("/api/reset-password/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .anyRequest().authenticated()

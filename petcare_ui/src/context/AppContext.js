@@ -215,6 +215,52 @@ export const AppProvider = ({ children }) => {
         return { success: false, error: result.error };
       }
     },
+
+    requestPasswordReset: async (email) => {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+      dispatch({ type: ActionTypes.CLEAR_ERROR });
+
+      if (!email) {
+        dispatch({
+          type: ActionTypes.SET_ERROR,
+          payload: "Vui lòng nhập email của bạn",
+        });
+        dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+        return { success: false, error: "Email không được để trống" };
+      }
+
+      const result = await authAPI.requestPasswordReset(email);
+      if (result.success) {
+        dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+        return { success: true };
+      } else {
+        dispatch({ type: ActionTypes.SET_ERROR, payload: result.error });
+        return { success: false, error: result.error };
+      }
+    },
+
+    finishPasswordReset: async (payload) => {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+      dispatch({ type: ActionTypes.CLEAR_ERROR });
+
+      if (!payload?.key || !payload?.newPassword) {
+        dispatch({
+          type: ActionTypes.SET_ERROR,
+          payload: "Vui lòng nhập đầy đủ mã và mật khẩu mới",
+        });
+        dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+        return { success: false, error: "Thiếu thông tin cần thiết" };
+      }
+
+      const result = await authAPI.finishPasswordReset(payload);
+      if (result.success) {
+        dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+        return { success: true };
+      } else {
+        dispatch({ type: ActionTypes.SET_ERROR, payload: result.error });
+        return { success: false, error: result.error };
+      }
+    },
     logout: () => {
       dispatch({ type: ActionTypes.LOGOUT });
     },

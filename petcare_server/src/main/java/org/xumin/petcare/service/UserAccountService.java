@@ -21,6 +21,7 @@ import org.xumin.petcare.service.mapper.UserAccountMapper;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -31,14 +32,16 @@ public class UserAccountService {
     private final UserAccountMapper userAccountMapper;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
+    private final EmailService emailService;
 
     @Autowired
-    public UserAccountService(UserAccountRepository userAccountRepository, CartRepository cartRepository, UserAccountMapper userAccountMapper, PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
+    public UserAccountService(UserAccountRepository userAccountRepository, CartRepository cartRepository, UserAccountMapper userAccountMapper, PasswordEncoder passwordEncoder, FileStorageService fileStorageService, EmailService emailService) {
         this.userAccountRepository = userAccountRepository;
         this.cartRepository = cartRepository;
         this.userAccountMapper = userAccountMapper;
         this.passwordEncoder = passwordEncoder;
         this.fileStorageService = fileStorageService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -151,5 +154,58 @@ public class UserAccountService {
         user.setAvatar(fileUrl);
         userAccountRepository.save(user);
         return Optional.of(userAccountMapper.toDto(user));
+    }
+
+    public Optional<UserAccountDTO> completePasswordReset(String newPassword, String key) {
+        log.debug("Reset user password for reset key {}", key);
+        return userAccountRepository.findOneByResetKey(key)
+                .filter(user -> {
+                    // Logic kiểm tra hết hạn:
+                    return user.getResetDate().isAfter(Instant.now().minusSeconds(900));
+                })
+                .map(user -> {
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    user.setResetKey(null);
+                    user.setResetDate(null);
+                    UserAccount updatedUser = userAccountRepository.save(user);
+                    return userAccountMapper.toDto(updatedUser);
+                });
+    }
+
+    public Optional<UserAccountDTO> requestPasswordReset(String mail) {
+        log.info("1. Bắt đầu yêu cầu reset pass cho: {}", mail);
+
+        Optional<UserAccount> userOptional = userAccountRepository.findOneByEmailIgnoreCase(mail);
+
+        if (userOptional.isPresent()) {
+            UserAccount user = userOptional.get();
+            log.info("2. Tìm thấy user id: {}, isActivated: {}", user.getId(), user.getActivated());
+
+            if (!user.getActivated()) {
+                log.warn("!!! User chưa kích hoạt. Dừng xử lý.");
+                return Optional.empty();
+            }
+
+            // Logic update
+            user.setResetKey(UUID.randomUUID().toString());
+            user.setResetDate(Instant.now());
+            userAccountRepository.save(user);
+            log.info("3. Đã save Reset Key vào DB: {}", user.getResetKey());
+
+            // Logic gửi mail
+            try {
+                log.info("4. Chuẩn bị gửi mail...");
+                emailService.sendForgotPasswordEmail(user.getEmail(), user.getName(), user.getResetKey());
+                log.info("5. Gửi mail thành công!");
+            } catch (Exception e) {
+                log.error("!!! Lỗi khi gửi mail: ", e);
+            }
+
+            return Optional.of(userAccountMapper.toDto(user));
+        } else {
+            log.warn("!!! Không tìm thấy email trong DB");
+        }
+
+        return Optional.empty();
     }
 }

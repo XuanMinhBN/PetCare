@@ -64,7 +64,7 @@ public class BookingController {
     @GetMapping("/appointments")
     public ResponseEntity<Page<AppointmentDTO>> myAppointments(@ParameterObject Pageable pageable){
         log.debug("REST request to get a page of appointments");
-        Page<AppointmentDTO> page = appointmentService.getAppointmentsCurrenUser(pageable);
+        Page<AppointmentDTO> page = appointmentService.getAppointmentsDesc(pageable);
         return ResponseEntity.ok().body(page);
     }
 
