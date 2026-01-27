@@ -1,5 +1,6 @@
 package org.xumin.petcare.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.xumin.petcare.domain.enumeration.Role;
 import org.xumin.petcare.domain.enumeration.Tier;
@@ -28,6 +29,7 @@ public class UserAccount implements Serializable {
     private String email;
 
     @Column(name = "password", length = 200, nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "phone", length = 20)
@@ -54,24 +56,31 @@ public class UserAccount implements Serializable {
     private Instant updated;
 
     @Column(name = "reset_key", length = 50)
+    @JsonIgnore
     private String resetKey;
 
     @Column(name = "reset_date")
+    @JsonIgnore
     private Instant resetDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Appointment> appointments = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Cart cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Address> addresses = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Pet> pets = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

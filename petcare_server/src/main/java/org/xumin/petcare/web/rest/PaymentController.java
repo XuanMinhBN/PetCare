@@ -1,33 +1,58 @@
 package org.xumin.petcare.web.rest;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.xumin.petcare.service.CheckoutService;
+import org.xumin.petcare.service.OrderService;
+import org.xumin.petcare.service.dto.CartRequest;
+import vn.payos.PayOS;
+import vn.payos.type.Webhook;
+import vn.payos.type.WebhookData;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
-//    @PostMapping("/orders/{orderId}/qr")
-//    public ResponseEntity<ApiResponse<PaymentDTO>> qrForOrder(@PathVariable java.util.UUID orderId){
-//        PaymentDTO p = PaymentDTO.builder().id(java.util.UUID.randomUUID()).provider("vietqr").status("pending").amount(new BigDecimal("165000")).qrPayload("QR_BASE64_OR_URL").createdAt(java.time.OffsetDateTime.now()).build();
-//        return ResponseEntity.ok(new ApiResponse<>(p));
-//    }
-//
-//    @PostMapping("/subscriptions/{subscriptionId}/qr")
-//    public ResponseEntity<ApiResponse<PaymentDTO>> qrForSub(@PathVariable java.util.UUID subscriptionId){
-//        PaymentDTO p = PaymentDTO.builder().id(java.util.UUID.randomUUID()).provider("vietqr").status("pending").amount(new BigDecimal("79000")).qrPayload("QR_BASE64_OR_URL").createdAt(java.time.OffsetDateTime.now()).build();
-//        return ResponseEntity.ok(new ApiResponse<>(p));
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<ApiResponse<PaymentDTO>> get(@PathVariable java.util.UUID id){
-//        return ResponseEntity.ok(new ApiResponse<>(PaymentDTO.builder().id(id).status("pending").build()));
-//    }
-//
-//    @PostMapping("/webhooks")
-//    public ResponseEntity<ApiResponse<Map<String,Object>>> webhook(@RequestBody Map<String,Object> payload){
-//        return ResponseEntity.ok(new ApiResponse<>(Map.of("ok", true)));
-//    }
+    private final PayOS payOS;
+    private final OrderService orderService;
+    private final CheckoutService checkoutService;
 
+    @Autowired
+    public PaymentController(PayOS payOS, OrderService orderService, CheckoutService checkoutService) {
+        this.payOS = payOS;
+        this.orderService = orderService;
+        this.checkoutService = checkoutService;
+    }
+
+    @PostMapping("/create-payment-link")
+    public ResponseEntity<?> createPaymentLink(@RequestBody CartRequest request) {
+        try {
+            // Gọi hàm createCheckoutUrl mà bạn thắc mắc đây
+            // Hàm này sẽ tính toán, lưu đơn hàng PENDING và trả về Link PayOS
+            String checkoutUrl = checkoutService.createCheckoutUrl(
+                    request.getItems(),
+                    request.getShippingFee(),
+                    request.getDiscount()
+            );
+            // Trả về URL cho Frontend (để nó redirect người dùng sang PayOS)
+            return ResponseEntity.ok(Collections.singletonMap("url", checkoutUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/payos-webhook")
+    public ResponseEntity<String> handlePayOSWebhook(@RequestBody Webhook webhookBody) {
+        try {
+            orderService.handlePayOSWebhook(webhookBody);
+            return ResponseEntity.ok("Success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok("Error");
+        }
+    }
 }

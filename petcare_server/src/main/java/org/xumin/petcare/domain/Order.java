@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -34,7 +35,7 @@ public class Order implements Serializable {
     private String paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", length = 50, nullable = false)
     private OrderStatus status;
 
     @Column(name = "qr_txn_id", length = 80)
@@ -56,6 +57,9 @@ public class Order implements Serializable {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderCoupon> orderCoupons = new HashSet<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
 
     public Order() {
     }
@@ -154,6 +158,14 @@ public class Order implements Serializable {
 
     public void setOrderCoupons(Set<OrderCoupon> orderCoupons) {
         this.orderCoupons = orderCoupons;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 
     @Override

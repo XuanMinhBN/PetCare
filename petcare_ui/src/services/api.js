@@ -297,6 +297,24 @@ export const checkoutAPI = {
   },
 };
 
+// API cho chức năng thanh toán
+export const paymentAPI = {
+  // Tạo link thanh toán PayOS
+  createPaymentLink: async (orderData) => {
+    try {
+      const response = await api.post("/payments/create-payment-link", orderData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          "Không thể tạo link thanh toán",
+      };
+    }
+  },
+};
+
 export const servicesAPI = {
   // Lấy danh sách dịch vụ
   getServices: async () => {

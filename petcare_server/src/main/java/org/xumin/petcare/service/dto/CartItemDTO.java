@@ -1,15 +1,16 @@
 package org.xumin.petcare.service.dto;
 
+import org.xumin.petcare.domain.Product;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
 public class CartItemDTO implements Serializable {
     private Long id;
-    private Integer qty;
+    private Integer quantity;
     private BigDecimal price;
     private Instant createdAt;
-    private CartDTO cart;
     private ProductDTO product;
 
     public Long getId() {
@@ -20,12 +21,12 @@ public class CartItemDTO implements Serializable {
         this.id = id;
     }
 
-    public Integer getQty() {
-        return qty;
+    public Integer getQuantity() {
+        return quantity;
     }
 
-    public void setQty(Integer qty) {
-        this.qty = qty;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public BigDecimal getPrice() {
@@ -42,14 +43,6 @@ public class CartItemDTO implements Serializable {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public CartDTO getCart() {
-        return cart;
-    }
-
-    public void setCart(CartDTO cart) {
-        this.cart = cart;
     }
 
     public ProductDTO getProduct() {

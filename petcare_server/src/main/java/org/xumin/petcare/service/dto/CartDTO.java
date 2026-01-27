@@ -2,12 +2,14 @@ package org.xumin.petcare.service.dto;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 
 public class CartDTO implements Serializable {
     private Long id;
     private Instant createdAt;
     private Instant updatedAt;
     private UserAccountDTO user;
+    private List<CartItemDTO> cartItems;
 
     public Long getId() {
         return id;
@@ -39,5 +41,13 @@ public class CartDTO implements Serializable {
 
     public void setUser(UserAccountDTO user) {
         this.user = user;
+    }
+
+    public List<CartItemDTO> getCartItems() {
+        return cartItems;
+    }
+
+    public void setCartItems(List<CartItemDTO> cartItems) {
+        this.cartItems = cartItems;
     }
 }

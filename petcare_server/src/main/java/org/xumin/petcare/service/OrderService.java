@@ -8,18 +8,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.xumin.petcare.domain.Cart;
-import org.xumin.petcare.domain.Order;
-import org.xumin.petcare.domain.UserAccount;
+import org.xumin.petcare.domain.*;
 import org.xumin.petcare.domain.enumeration.OrderStatus;
-import org.xumin.petcare.repository.CartItemRepository;
-import org.xumin.petcare.repository.CartRepository;
-import org.xumin.petcare.repository.OrderRepository;
-import org.xumin.petcare.repository.UserAccountRepository;
+import org.xumin.petcare.repository.*;
 import org.xumin.petcare.security.SecurityUtils;
 import org.xumin.petcare.service.dto.OrderDTO;
 import org.xumin.petcare.service.mapper.OrderMapper;
+import vn.payos.PayOS;
+import vn.payos.type.Webhook;
+import vn.payos.type.WebhookData;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -32,14 +31,18 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final CartRepository cartRepository;
     private final OrderMapper orderMapper;
+    private final PayOS payOS;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, UserAccountRepository accountRepository, CartItemRepository cartItemRepository, CartRepository cartRepository, OrderMapper orderMapper) {
+    public OrderService(OrderRepository orderRepository, UserAccountRepository accountRepository, CartItemRepository cartItemRepository, CartRepository cartRepository, OrderMapper orderMapper, PayOS payOS, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.accountRepository = accountRepository;
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.orderMapper = orderMapper;
+        this.payOS = payOS;
+        this.productRepository = productRepository;
     }
 
     @Transactional
@@ -100,5 +103,48 @@ public class OrderService {
     @Transactional
     public boolean existedId(Long orderId) {
         return orderRepository.existsById(orderId);
+    }
+
+    public void handlePayOSWebhook(Webhook webhookBody) throws Exception {
+        // 1. Verify dữ liệu (Chống giả mạo)
+        WebhookData data = payOS.verifyPaymentWebhookData(webhookBody);
+
+        // 2. Tìm đơn hàng
+        String orderCodeStr = String.valueOf(data.getOrderCode());
+        Order order = orderRepository.findOrderByQrTxnId(orderCodeStr)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với mã: " + orderCodeStr));
+        // 3. Kiểm tra trạng thái để tránh xử lý trùng lặp
+        if ("PAID".equals(order.getStatus())) {
+            return; // Đã thanh toán rồi thì thôi, không làm gì cả
+        }
+        // 4. Kiểm tra số tiền (Convert int từ Webhook sang BigDecimal)
+        BigDecimal amountPaid = BigDecimal.valueOf(data.getAmount());
+        // Nếu tiền thanh toán < tổng đơn -> Báo lỗi hoặc xử lý "thanh toán thiếu"
+        if (amountPaid.compareTo(order.getTotal()) < 0) {
+            throw new RuntimeException("Số tiền thanh toán không đủ!");
+        }
+        // 5. Cập nhật trạng thái Order
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(Instant.now());
+        orderRepository.save(order);
+        // 6. Trừ tồn kho (Inventory)
+        updateInventory(order);
+    }
+
+    // Tách hàm con cho code gọn gàng
+    private void updateInventory(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            // Logic trừ kho
+            int currentStock = product.getStock();
+            int qtySold = item.getQty();
+            if (currentStock < qtySold) {
+                // Tùy nghiệp vụ: Có thể throw lỗi để rollback giao dịch
+                // Hoặc log lại để nhân viên xử lý thủ công
+                throw new RuntimeException("Sản phẩm " + product.getSku() + " không đủ tồn kho!");
+            }
+            product.setStock(currentStock - qtySold);
+            productRepository.save(product);
+        }
     }
 }

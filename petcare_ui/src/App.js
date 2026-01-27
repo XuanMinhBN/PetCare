@@ -26,6 +26,7 @@ import EditAddress from "./pages/EditAddress";
 import Notifications from "./pages/Notifications";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ProductManagement from "./pages/admin/ProductManagement";
 import OrderManagement from "./pages/admin/OrderManagement";
@@ -54,11 +55,20 @@ function App() {
       const path = window.location.pathname;
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
+      const orderId = urlParams.get("orderId");
 
       // Nếu URL là /reset-password và có token, chuyển đến trang reset password
       if (path === "/reset-password" && token) {
         setScreen("reset-password");
         setNavigationStack(["reset-password"]);
+        setIsInitialized(true);
+        return;
+      }
+
+      // Nếu URL là /payment-success và có orderId, chuyển đến trang thành công thanh toán
+      if (path === "/payment-success" && orderId) {
+        setScreen("payment-success");
+        setNavigationStack(["payment-success"]);
         setIsInitialized(true);
         return;
       }
@@ -229,6 +239,10 @@ function App() {
     return <Checkout onNavigate={navigateWithParams} onBack={goBack} />;
   if (screen === "order-history")
     return <OrderHistory onNavigate={navigateWithParams} onBack={goBack} />;
+  if (screen === "payment-success")
+    return (
+      <PaymentSuccess onNavigate={navigateWithParams} onBack={goBack} />
+    );
   if (screen === "booking-confirmation")
     return (
       <BookingConfirmation

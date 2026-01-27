@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { checkoutAPI } from "../services/api";
+import { checkoutAPI, paymentAPI } from "../services/api";
 
 function Checkout({ onNavigate, onBack }) {
   const [cartItems, setCartItems] = useState([]);
@@ -26,9 +26,11 @@ function Checkout({ onNavigate, onBack }) {
         console.log("Cart items from API:", items); // Debug log
 
         // Transform the data to match component expectations
+        // Lưu toàn bộ product object để có thể gửi đầy đủ thông tin khi tạo order
         const transformedItems = items.map((item) => ({
           id: item.id,
           productId: item.product?.id,
+          product: item.product || null, // Lưu toàn bộ product object
           name: item.product?.name || "Unknown Product",
           price: item.price || item.product?.price || 0,
           quantity: item.qty || 1,
@@ -134,6 +136,7 @@ function Checkout({ onNavigate, onBack }) {
       const orderPayload = {
         items: cartItems.map((item) => ({
           productId: item.productId,
+          product: item.product || null, // Gửi đầy đủ product object
           quantity: item.quantity,
           price: item.price,
         })),
@@ -147,6 +150,30 @@ function Checkout({ onNavigate, onBack }) {
         couponCode: appliedCoupon?.code,
       };
 
+      // Nếu thanh toán qua PayOS
+      if (orderData.paymentMethod === "payos") {
+        const paymentResult = await paymentAPI.createPaymentLink(orderPayload);
+
+        if (paymentResult.success) {
+          // Lấy URL thanh toán từ response
+          const paymentUrl = paymentResult.data?.paymentUrl || paymentResult.data?.checkoutUrl;
+          
+          if (paymentUrl) {
+            // Redirect đến trang thanh toán PayOS
+            window.location.href = paymentUrl;
+          } else {
+            alert("Không thể lấy link thanh toán. Vui lòng thử lại.");
+            setProcessing(false);
+          }
+          return;
+        } else {
+          alert(paymentResult.error || "Không thể tạo link thanh toán");
+          setProcessing(false);
+          return;
+        }
+      }
+
+      // Xử lý các phương thức thanh toán khác (COD, bank transfer)
       const result = await checkoutAPI.createOrder(orderPayload);
 
       if (result.success) {
@@ -368,6 +395,7 @@ function Checkout({ onNavigate, onBack }) {
                 >
                   <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                   <option value="bank">Chuyển khoản ngân hàng</option>
+                  <option value="payos">Thanh toán online (PayOS)</option>
                 </select>
               </div>
             </div>
