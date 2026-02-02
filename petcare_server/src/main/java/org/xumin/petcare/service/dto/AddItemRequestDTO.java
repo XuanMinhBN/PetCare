@@ -2,7 +2,7 @@ package org.xumin.petcare.service.dto;
 
 public class AddItemRequestDTO {
     private Long productId;
-    private int quantity;
+    private Integer quantity;
 
     public Long getProductId() {
         return productId;
@@ -12,11 +12,11 @@ public class AddItemRequestDTO {
         this.productId = productId;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 }

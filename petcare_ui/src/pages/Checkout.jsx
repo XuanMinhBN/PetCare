@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { checkoutAPI, paymentAPI } from "../services/api";
+import { useApp } from "../context/AppContext";
 
 function Checkout({ onNavigate, onBack }) {
+  const { state } = useApp();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -133,7 +135,11 @@ function Checkout({ onNavigate, onBack }) {
     setProcessing(true);
 
     try {
+      // Lấy userId từ state (ưu tiên id, fallback sang sub trong JWT)
+      const userId = state?.user?.id || state?.user?.sub || null;
+
       const orderPayload = {
+        userId, // gửi kèm userId để backend gắn đơn hàng với người dùng, đặc biệt cho PayOS
         items: cartItems.map((item) => ({
           productId: item.productId,
           product: item.product || null, // Gửi đầy đủ product object

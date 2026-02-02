@@ -73,7 +73,8 @@ public class CartItemService {
         CartItem cartItem = cartItemRepository
                 .findCartItemByCartIdAndProductId(cart.getId(), productId)
                 .map(item -> {
-                    item.setQty(item.getQty() + quantity);
+                    System.out.println(item.getQuantity());
+                    item.setQuantity(item.getQuantity() + quantity);
                     item.setPrice(product.getPrice());
                     item.setUpdatedAt(Instant.now());
                     return item;
@@ -82,7 +83,7 @@ public class CartItemService {
                     CartItem newItem = new CartItem();
                     newItem.setCart(cart);
                     newItem.setProduct(product);
-                    newItem.setQty(quantity);
+                    newItem.setQuantity(quantity);
                     newItem.setPrice(product.getPrice());
                     newItem.setCreatedAt(Instant.now());
                     newItem.setUpdatedAt(Instant.now());
@@ -130,7 +131,7 @@ public class CartItemService {
         }
 
         // Cập nhật số lượng và giá
-        cartItem.setQty(newQuantity);
+        cartItem.setQuantity(newQuantity);
         cartItem.setPrice(cartItem.getProduct().getPrice()); // cập nhật lại theo giá mới nếu cần
         cartItem.setUpdatedAt(Instant.now());
 

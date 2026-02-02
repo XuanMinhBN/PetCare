@@ -29,7 +29,7 @@ function ShoppingCart({ onNavigate, onBack }) {
           items = cartData.items.content.map((item) => ({
             id: item.id,
             productId: item.product.id,
-            quantity: item.qty,
+            quantity: item.quantity,
             price: item.price,
             name: item.product.name,
             description: item.product.sku || "",

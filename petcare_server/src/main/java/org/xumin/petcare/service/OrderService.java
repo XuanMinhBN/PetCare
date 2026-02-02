@@ -74,7 +74,7 @@ public class OrderService {
         return accountRepository.findOneByEmailIgnoreCase(username)
                 .map(userAccount -> {
                     // Nếu user tồn tại, dùng ID để tìm địa chỉ
-                    return orderRepository.findOrdersByUserId(userAccount.getId(), pageable)
+                    return orderRepository.findOrdersByUserIdOrderByIdDesc(userAccount.getId(), pageable)
                             .map(orderMapper::toDto);
                 })
                 // Nếu không tìm thấy user, trả về một trang rỗng

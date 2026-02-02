@@ -8,9 +8,6 @@ import org.xumin.petcare.service.OrderService;
 import org.xumin.petcare.service.dto.CartRequest;
 import vn.payos.PayOS;
 import vn.payos.type.Webhook;
-import vn.payos.type.WebhookData;
-
-import java.time.LocalDateTime;
 import java.util.Collections;
 
 @RestController
@@ -38,7 +35,7 @@ public class PaymentController {
                     request.getDiscount()
             );
             // Trả về URL cho Frontend (để nó redirect người dùng sang PayOS)
-            return ResponseEntity.ok(Collections.singletonMap("url", checkoutUrl));
+            return ResponseEntity.ok(Collections.singletonMap("checkoutUrl", checkoutUrl));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -49,6 +46,7 @@ public class PaymentController {
     public ResponseEntity<String> handlePayOSWebhook(@RequestBody Webhook webhookBody) {
         try {
             orderService.handlePayOSWebhook(webhookBody);
+//            System.out.println("Webhook nhận được: " + requestBody); @RequestBody Map<String, Object> requestBody
             return ResponseEntity.ok("Success");
         } catch (Exception e) {
             e.printStackTrace();

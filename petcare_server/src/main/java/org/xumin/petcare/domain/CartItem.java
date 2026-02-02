@@ -20,7 +20,7 @@ public class CartItem implements Serializable  {
     private Long id;
 
     @Column(name = "qty", nullable = false)
-    private Integer qty;
+    private Integer quantity;
 
     @Column(name = "price", precision = 21, scale = 2, nullable = false)
     private BigDecimal price;
@@ -50,12 +50,12 @@ public class CartItem implements Serializable  {
         this.id = id;
     }
 
-    public Integer getQty() {
-        return qty;
+    public Integer getQuantity() {
+        return quantity;
     }
 
-    public void setQty(Integer qty) {
-        this.qty = qty;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public BigDecimal getPrice() {
@@ -102,7 +102,7 @@ public class CartItem implements Serializable  {
     public String toString() {
         return "CartItem{" +
                 "id=" + id +
-                ", qty=" + qty +
+                ", qty=" + quantity +
                 ", price=" + price +
                 ", createdAt=" + createdAt +
                 '}';
