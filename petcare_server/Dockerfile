@@ -12,10 +12,10 @@ RUN mvn dependency:go-offline
 COPY src ./src
 
 # Build ra file .jar (Bỏ qua test cho nhanh)
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -U
 
 # --- GIAI ĐOẠN 2: Run (Chạy ứng dụng) ---
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
