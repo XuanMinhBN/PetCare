@@ -1,11 +1,13 @@
 package org.xumin.petcare.service;
 
 import com.sun.jdi.InvalidTypeException;
+import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.xumin.petcare.domain.*;
@@ -56,7 +58,7 @@ public class OrderService {
         UserAccount userAccount = accountRepository.findOneByEmailIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Order order = orderMapper.toEntity(orderDTO);
-        order.setStatus(OrderStatus.CREATED);
+        order.setStatus(OrderStatus.PENDING);
         order.setCreatedAt(Instant.now());
         order.setUser(userAccount);
         Order result = orderRepository.save(order);
@@ -77,8 +79,14 @@ public class OrderService {
                     return orderRepository.findOrdersByUserIdOrderByIdDesc(userAccount.getId(), pageable)
                             .map(orderMapper::toDto);
                 })
-                // Nếu không tìm thấy user, trả về một trang rỗng
                 .orElse(Page.empty(pageable));
+    }
+
+    @Transactional
+    public Page<OrderDTO> getOrders(Pageable pageable) {
+        log.debug("Request to get orders");
+        Page<Order> orders = orderRepository.findAllByOrderByIdDesc(pageable);
+        return orders.map(orderMapper::toDto);
     }
 
     @Transactional(readOnly = true)
@@ -92,7 +100,7 @@ public class OrderService {
         log.debug("Request to confirm order : {}", id);
         Order order = orderRepository.findOrderById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order.getStatus() != OrderStatus.CREATED) {
+        if (order.getStatus() != OrderStatus.PENDING) {
             throw new InvalidTypeException("Cannot cancel a PAID order.");
         }
         order.setStatus(OrderStatus.CANCELED);
@@ -146,5 +154,17 @@ public class OrderService {
             product.setStock(currentStock - qtySold);
             productRepository.save(product);
         }
+    }
+
+    @Transactional
+    public OrderDTO confirmOrder(Long id) throws BadRequestException {
+        Order order = orderRepository.findOrderById(id)
+                .orElseThrow(() -> new BadRequestException("Order not found"));
+        if(order.getStatus() != OrderStatus.PENDING) {
+            throw new BadRequestException("Only PENDING orders can be confirmed");
+        }
+        order.setStatus(OrderStatus.PACKING);
+        Order newOrder = orderRepository.save(order);
+        return orderMapper.toDto(newOrder);
     }
 }

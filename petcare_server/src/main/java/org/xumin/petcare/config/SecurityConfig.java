@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/booking/appointments/{id}/confirm", "/api/booking/appointments/{id}/complete").hasRole("STAFF")
-                        .requestMatchers("/api/login", "/api/register", "/api/catalog/**", "/api/profile/**", "/api/booking/**", "/api/checkout/**", "/api/payments/**").permitAll()
+                        .requestMatchers("/api/login", "/api/google", "/api/register", "/api/catalog/**", "/api/profile/**", "/api/booking/**", "/api/checkout/**", "/api/payments/**").permitAll()
                         .requestMatchers("/api/reset-password/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/images/**").permitAll()

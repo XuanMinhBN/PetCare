@@ -14,14 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.xumin.petcare.domain.Order;
 import org.xumin.petcare.domain.enumeration.OrderStatus;
-import org.xumin.petcare.service.CartItemService;
-import org.xumin.petcare.service.CartService;
-import org.xumin.petcare.service.OrderCouponService;
-import org.xumin.petcare.service.OrderService;
+import org.xumin.petcare.service.*;
 import org.xumin.petcare.service.dto.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -34,13 +32,15 @@ public class CheckoutController {
     private final OrderService orderService;
     private final CartItemService cartItemService;
     private final OrderCouponService orderCouponService;
+    private final NotificationService notificationService;
 
     @Autowired
-    public CheckoutController(CartService cartService, OrderService orderService, CartItemService cartItemService, OrderCouponService orderCouponService) {
+    public CheckoutController(CartService cartService, OrderService orderService, CartItemService cartItemService, OrderCouponService orderCouponService, NotificationService notificationService) {
         this.cartService = cartService;
         this.orderService = orderService;
         this.cartItemService = cartItemService;
         this.orderCouponService = orderCouponService;
+        this.notificationService = notificationService;
     }
 
     // Cart
@@ -116,6 +116,13 @@ public class CheckoutController {
         return ResponseEntity.ok().body(orders);
     }
 
+    @GetMapping("/all-orders")
+    public ResponseEntity<Page<OrderDTO>> allOrders(@ParameterObject Pageable pageable){
+        log.debug("REST request to get a page of all orders");
+        Page<OrderDTO> orders = orderService.getOrders(pageable);
+        return ResponseEntity.ok().body(orders);
+    }
+
     @GetMapping("/orders/{id}")
     public ResponseEntity<OrderDTO> order(@PathVariable Long id){
         log.debug("REST request to get order");
@@ -130,4 +137,20 @@ public class CheckoutController {
         return ResponseEntity.ok().body(result);
     }
 
+    @PatchMapping("/orders/{id}/confirm")
+    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long id) throws BadRequestException, InvalidTypeException {
+        log.debug("REST request to confirm order");
+        OrderDTO result = orderService.confirmOrder(id);
+        NotificationDTO ndto = new NotificationDTO();
+        ndto.setType("ORDER_CONFIRMED");
+        ndto.setTitle("Order Confirmed");
+        ndto.setBody("Your order has been confirmed and is being packed!");
+        ndto.setSeen(false);
+        ndto.setCreatedAt(Instant.now());
+        NotificationDTO notification = notificationService.createNotification(
+                result.getUser().getId(),
+                ndto
+        );
+        return ResponseEntity.ok().body(result);
+    }
 }

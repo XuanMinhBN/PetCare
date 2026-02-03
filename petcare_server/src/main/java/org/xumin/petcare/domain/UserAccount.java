@@ -2,6 +2,7 @@ package org.xumin.petcare.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.xumin.petcare.domain.enumeration.AuthProvider;
 import org.xumin.petcare.domain.enumeration.Role;
 import org.xumin.petcare.domain.enumeration.Tier;
 
@@ -62,6 +63,9 @@ public class UserAccount implements Serializable {
     @Column(name = "reset_date")
     @JsonIgnore
     private Instant resetDate;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -239,6 +243,14 @@ public class UserAccount implements Serializable {
 
     public void setResetDate(Instant resetDate) {
         this.resetDate = resetDate;
+    }
+
+    public AuthProvider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(AuthProvider provider) {
+        this.provider = provider;
     }
 
     @Override

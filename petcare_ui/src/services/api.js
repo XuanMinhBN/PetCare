@@ -9,6 +9,13 @@ const api = axios.create({
   headers: API_CONFIG.HEADERS,
 });
 
+// Tạo axios instance riêng cho Google OAuth (không cần auth header)
+const apiPublic = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: API_CONFIG.HEADERS,
+});
+
 // Interceptor để thêm token vào headers một cách tự động
 api.interceptors.request.use(
   (config) => {
@@ -18,7 +25,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Interceptor để xử lý lỗi 401 (Unauthorized) một cách tập trung
@@ -34,7 +41,7 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // API Services
@@ -130,6 +137,29 @@ export const authAPI = {
     }
   },
 
+  // Đăng nhập bằng Google (credential từ Google Identity Services)
+  loginWithGoogle: async ({ credential }) => {
+    try {
+      // Sử dụng apiPublic để tránh thêm Authorization header (endpoint này là public)
+      // Gửi credential với key "token" như backend mong đợi
+      const response = await apiPublic.post("/google", { token: credential });
+      const { token } = response.data;
+
+      if (!token) {
+        return { success: false, error: "Không nhận được token từ server." };
+      }
+
+      const decodedUser = jwtDecode(token);
+      localStorage.setItem("authToken", token);
+      return { success: true, user: decodedUser, token };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Đăng nhập Google thất bại.";
+      console.error("[authAPI.loginWithGoogle] Error:", errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Các hàm này không còn cần thiết khi AppContext quản lý state
   // nhưng giữ lại để tránh lỗi nếu có nơi khác đang gọi
   getCurrentUser: () => null,
@@ -198,7 +228,7 @@ export const checkoutAPI = {
     try {
       const response = await api.patch(
         `/checkout/cart/items/${itemId}`,
-        updateData
+        updateData,
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -237,10 +267,31 @@ export const checkoutAPI = {
     }
   },
 
-  // Lấy danh sách đơn hàng
+  // Lấy danh sách đơn hàng (của user đăng nhập)
   getOrders: async () => {
     try {
       const response = await api.get("/checkout/orders");
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message || "Lấy danh sách đơn hàng thất bại",
+      };
+    }
+  },
+
+  // Lấy tất cả đơn hàng (cho staff/admin)
+  getAllOrders: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.page != null) queryParams.append("page", params.page);
+      if (params.size != null) queryParams.append("size", params.size);
+      if (params.status) queryParams.append("status", params.status);
+      if (params.sort) queryParams.append("sort", params.sort);
+      const queryString = queryParams.toString();
+      const url = `/checkout/all-orders${queryString ? `?${queryString}` : ""}`;
+      const response = await api.get(url);
       return { success: true, data: response.data };
     } catch (error) {
       return {
@@ -278,6 +329,19 @@ export const checkoutAPI = {
     }
   },
 
+  // Xác nhận đơn hàng (cho staff)
+  confirmOrder: async (orderId) => {
+    try {
+      const response = await api.patch(`/checkout/orders/${orderId}/confirm`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Xác nhận đơn hàng thất bại",
+      };
+    }
+  },
+
   // Áp dụng coupon cho đơn hàng
   applyCoupon: async (orderId, couponCode) => {
     try {
@@ -285,7 +349,7 @@ export const checkoutAPI = {
         `/checkout/order/${orderId}/apply-coupon`,
         {
           couponCode: couponCode,
-        }
+        },
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -302,14 +366,15 @@ export const paymentAPI = {
   // Tạo link thanh toán PayOS
   createPaymentLink: async (orderData) => {
     try {
-      const response = await api.post("/payments/create-payment-link", orderData);
+      const response = await api.post(
+        "/payments/create-payment-link",
+        orderData,
+      );
       return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
-        error:
-          error.response?.data?.message ||
-          "Không thể tạo link thanh toán",
+        error: error.response?.data?.message || "Không thể tạo link thanh toán",
       };
     }
   },
@@ -593,7 +658,7 @@ export const bookingAPI = {
   completeAppointment: async (appointmentId) => {
     try {
       const response = await api.post(
-        `/booking/appointments/${appointmentId}/complete`
+        `/booking/appointments/${appointmentId}/complete`,
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -608,7 +673,7 @@ export const bookingAPI = {
   cancelAppointment: async (appointmentId) => {
     try {
       const response = await api.post(
-        `/booking/appointments/${appointmentId}/cancel`
+        `/booking/appointments/${appointmentId}/cancel`,
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -623,7 +688,7 @@ export const bookingAPI = {
   confirmAppointment: async (appointmentId) => {
     try {
       const response = await api.patch(
-        `/booking/appointments/${appointmentId}/confirm`
+        `/booking/appointments/${appointmentId}/confirm`,
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -793,7 +858,7 @@ export const profileAPI = {
     try {
       const response = await api.patch(
         `/profile/addresses/${addressId}`,
-        addressData
+        addressData,
       );
       return { success: true, data: response.data };
     } catch (error) {
@@ -825,12 +890,12 @@ export const profileAPI = {
       console.log("[profileAPI] getNotifications response:", response);
       console.log(
         "[profileAPI] getNotifications response.data:",
-        response.data
+        response.data,
       );
       console.log("[profileAPI] response.data type:", typeof response.data);
       console.log(
         "[profileAPI] response.data isArray:",
-        Array.isArray(response.data)
+        Array.isArray(response.data),
       );
 
       // Xử lý trường hợp response.data có thể là object với thuộc tính data
@@ -844,19 +909,19 @@ export const profileAPI = {
           notificationsData = response.data.data;
           console.log(
             "[profileAPI] Using response.data.data:",
-            notificationsData
+            notificationsData,
           );
         } else if (response.data.notifications) {
           notificationsData = response.data.notifications;
           console.log(
             "[profileAPI] Using response.data.notifications:",
-            notificationsData
+            notificationsData,
           );
         } else if (response.data.content) {
           notificationsData = response.data.content;
           console.log(
             "[profileAPI] Using response.data.content:",
-            notificationsData
+            notificationsData,
           );
         }
       }
@@ -867,7 +932,7 @@ export const profileAPI = {
       console.error("[profileAPI] getNotifications error:", error);
       console.error(
         "[profileAPI] getNotifications error.response:",
-        error.response
+        error.response,
       );
 
       return {
@@ -882,7 +947,7 @@ export const profileAPI = {
     try {
       const response = await api.patch(
         `/profile/notifications/${notificationId}/seen`,
-        { seen: true }
+        { seen: true },
       );
       return { success: true, data: response.data };
     } catch (error) {

@@ -91,7 +91,7 @@ const appReducer = (state, action) => {
     case ActionTypes.SET_CART:
       const cartCount = action.payload.reduce(
         (total, item) => total + (item.quantity || 0),
-        0
+        0,
       );
       return { ...state, cart: action.payload, cartCount };
     case ActionTypes.ADD_TO_CART:
@@ -114,7 +114,7 @@ const appReducer = (state, action) => {
       };
     case ActionTypes.MARK_NOTIFICATION_AS_SEEN:
       const updatedNotifications = state.notifications.map((notif) =>
-        notif.id === action.payload ? { ...notif, seen: true } : notif
+        notif.id === action.payload ? { ...notif, seen: true } : notif,
       );
       const newUnreadCount = updatedNotifications.filter((n) => !n.seen).length;
       return {
@@ -201,6 +201,34 @@ export const AppProvider = ({ children }) => {
       } else {
         dispatch({ type: ActionTypes.SET_ERROR, payload: result.error });
         return { success: false, error: result.error };
+      }
+    },
+    loginWithGoogle: async ({ credential }) => {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+      dispatch({ type: ActionTypes.CLEAR_ERROR });
+      try {
+        const result = await authAPI.loginWithGoogle({ credential });
+        if (result.success) {
+          dispatch({
+            type: ActionTypes.LOGIN_SUCCESS,
+            payload: { user: result.user },
+          });
+          return { success: true };
+        } else {
+          dispatch({ type: ActionTypes.SET_ERROR, payload: result.error });
+          return { success: false, error: result.error };
+        }
+      } catch (error) {
+        dispatch({
+          type: ActionTypes.SET_ERROR,
+          payload: "Đăng nhập thất bại",
+        });
+        return {
+          success: false,
+          error: error?.message || "Đăng nhập thất bại",
+        };
+      } finally {
+        dispatch({ type: ActionTypes.SET_LOADING, payload: false });
       }
     },
     register: async (userData) => {
@@ -293,7 +321,7 @@ export const AppProvider = ({ children }) => {
         if (result.success) {
           console.log(
             "[AppContext] Dispatching SET_NOTIFICATIONS with data:",
-            result.data
+            result.data,
           );
           dispatch({
             type: ActionTypes.SET_NOTIFICATIONS,

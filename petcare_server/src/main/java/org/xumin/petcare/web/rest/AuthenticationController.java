@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.xumin.petcare.security.jwt.TokenProvider;
+import org.xumin.petcare.service.GoogleAuthService;
 import org.xumin.petcare.service.UserAccountService;
 import org.xumin.petcare.web.vm.KeyAndPasswordVM;
 import org.xumin.petcare.service.dto.UserAccountDTO;
@@ -20,6 +21,7 @@ import org.xumin.petcare.web.vm.ResetPasswordVM;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -29,12 +31,14 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
     private final UserAccountService userAccountService;
+    private final GoogleAuthService googleAuthService;
 
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, TokenProvider tokenProvider, UserAccountService userAccountService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, TokenProvider tokenProvider, UserAccountService userAccountService, GoogleAuthService googleAuthService) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userAccountService = userAccountService;
+        this.googleAuthService = googleAuthService;
     }
 
     @PostMapping("/login")
@@ -49,6 +53,13 @@ public class AuthenticationController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + jwt);
         return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        String jwt = googleAuthService.loginByGoogle(token);
+        return ResponseEntity.ok(Map.of("token", jwt));
     }
 
     @PostMapping("/register")
