@@ -68,8 +68,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // ĐIỀN ĐÚNG ĐỊA CHỈ IP HOẶC TÊN MIỀN CỦA BẠN VÀO ĐÂY
-        configuration.setAllowedOrigins(List.of("http://103.107.182.209", "http://localhost:3000"));
-
+        configuration.setAllowedOrigins(List.of("http://103.107.182.209", "http://localhost:3000", "https://petcare-application.vercel.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
