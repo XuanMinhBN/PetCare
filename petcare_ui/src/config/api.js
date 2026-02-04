@@ -1,6 +1,9 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || "http://localhost:8080/api",
+  BASE_URL: (() => {
+    const url = process.env.REACT_APP_API_URL || "http://localhost:8080";
+    return url.endsWith("/api") ? url : `${url}/api`;
+  })(),
   // BASE_URL: "/api",
   TIMEOUT: 10000,
   HEADERS: {
