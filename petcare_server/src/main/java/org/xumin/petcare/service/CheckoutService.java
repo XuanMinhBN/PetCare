@@ -131,8 +131,8 @@ public class CheckoutService {
         requestBody.setOrderCode(payosOrderCode);
         requestBody.setAmount(amountForPayOS);
         requestBody.setDescription("ThanhToanDonHang");
-        requestBody.setCancelUrl("http://localhost:3000/cancel");
-        requestBody.setReturnUrl("http://localhost:3000/success");
+        requestBody.setCancelUrl("https://petcare-application.vercel.app/cancel");
+        requestBody.setReturnUrl("https://petcare-application.vercel.app/success");
                 // .items(...) // Tạm thời bỏ items để đảm bảo API chạy 100% không lỗi format
 
         String signature = PayOSUtils.createSignature(checksumKey.trim(), requestBody);
@@ -149,10 +149,8 @@ public class CheckoutService {
         try {
             String url = "https://api-merchant.payos.vn/v2/payment-requests";
             PayOSResponse response = restTemplate.postForObject(url, entity, PayOSResponse.class);
-
-            // E. Kiểm tra kết quả
             if (response != null && "00".equals(response.getCode())) {
-                return response.getData().getCheckoutUrl(); // Trả về link thành công
+                return response.getData().getCheckoutUrl();
             } else {
                 throw new RuntimeException("PayOS Error: " + (response != null ? response.getDesc() : "Unknown"));
             }
